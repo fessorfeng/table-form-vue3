@@ -12,7 +12,7 @@ const priorityOptions = [
   { label: 'P4', value: 'ddd1-49a1-b-4300d7' },
 ];
 const caseMock: { [key: string]: any }[] = [];
-const num = 100;
+const num = 160;
 for (let i = 0; i < num; ++i) {
   const t = {
     createdBugCount: r.natural(1, 10),

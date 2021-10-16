@@ -21,8 +21,11 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
     return dom;
   };
   const visibleMaxNum = ref(0);
+  const scrollTop = ref(0);
   const getStartIndex = () => {
-    const currentIndex = Math.ceil(wrap().scrollTop / props.itemHeight);
+    const top = wrap().scrollTop;
+    scrollTop.value = top;
+    const currentIndex = Math.ceil( top / props.itemHeight);
     if (currentIndex === startIndex.value) return;
     if (
       currentIndex + visibleMaxNum.value >= dataList.value.length - 1 &&
@@ -56,8 +59,9 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
     };
   });
   const onScroll = () => {
-    const scrollTop = wrap().scrollTop;
-    console.log(scrollTop);
+    // 没用用去掉 查询会触发重排
+    // const scrollTop = wrap().scrollTop;
+    // console.log(scrollTop);
 
     const fps = 30;
     const interVal = 1000 / fps;
@@ -105,12 +109,18 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
   const getContainSize = () => {
     visibleMaxNum.value = ~~(wrap().offsetHeight / props.itemHeight) + 2;
   };
+  const scrollBarHeight = computed(() => {
+    return props.itemHeight * dataList.value.length;
+  });
   const setWrapStyle = () => {
     // wrap().style.overflowY = wrapStyle.value.overflowY;
     // wrap().style.height = wrapStyle.value.height;
     wrap().style.cssText += `overflow-y: ${wrapStyle.value.overflowY};height: ${wrapStyle.value.height}`;
+    // const bar = document.createElement('div');
+    // bar.style.cssText = `height: ${scrollBarHeight.value}px;position: absolute;top: 0;right: 0;left: 0;z-index: -1;`;
+    // wrap().appendChild(bar);
   };
-  const setScrollViewStyle = () => {
+  const setScrollViewStyle = (init = false) => {
     const scrollContainer = wrap();
     const { paddingTop, paddingBottom } = viewStyle.value;
     const scrollView = scrollContainer.children[0] as HTMLElement;
@@ -119,18 +129,21 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
     if (scrollView.nodeType === 1) {
       // scrollView.style.paddingTop = paddingTop;
       // scrollView.style.paddingBottom = paddingBottom;
-      scrollView.style.padding = `${paddingTop} 0 ${paddingBottom}`;
+      scrollView.style.padding = `${paddingTop} 0 ${paddingBottom}`; 
+      // 用scrollBar高度撑开了
+      // scrollView.style.transform = `translateY(${startIndex.value * props.itemHeight}px)`
+      // scrollView.style.cssText += `postision: absolute; translateY(${startIndex.value * props.itemHeight}px)`
     }
 
     // TODO: 这里可以考虑优化重构代码
-    if (props.isTable) {
+    if (props.isTable && !init) {
       const table = scrollWrap.value as TableFormTable<Obj>;
       const { fixedBodyWrapper, rightFixedBodyWrapper } = table.$refs;
       [fixedBodyWrapper, rightFixedBodyWrapper].forEach(v => {
         if (!v) return;
         const dom = v.children[0] as HTMLElement;
         if (dom.nodeType === 1) {
-          dom.style.transform = `translate(0, -${scrollContainer.scrollTop - startIndex.value * props.itemHeight}px)`;    
+          dom.style.transform = `translate(0, -${scrollTop.value - startIndex.value * props.itemHeight}px)`;    
         }
       });
     }
@@ -139,6 +152,7 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
     setWrapStyle();
     wrap().addEventListener('scroll', onScroll);
     getContainSize();
+    setScrollViewStyle(true);
   });
   onUnmounted(() => {
     const dom = wrap();
@@ -157,6 +171,8 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
     endIndex,
     showDataList,
     viewStyle,
+    scrollBarHeight,
+    scrollTop,
   };
 };
 
