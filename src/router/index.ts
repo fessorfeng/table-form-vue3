@@ -43,6 +43,11 @@ const routes: Array<RouteRecordRaw> = [
       import( "../views/Table6.vue"),
   },
   {
+    path: "/table7",
+    component: () =>
+      import( "../views/Table7.vue"),
+  },
+  {
     path: "/scroll",
     component: () =>
       import( "../views/VirtualScroll.vue"),

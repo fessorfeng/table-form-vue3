@@ -23,8 +23,9 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
   const visibleMaxNum = ref(0);
   const scrollTop = ref(0);
   const getStartIndex = () => {
-    const top = wrap().scrollTop;
-    scrollTop.value = top;
+    // const top = wrap().scrollTop;
+    // scrollTop.value = top;
+    const top = scrollTop.value;
     const currentIndex = Math.ceil( top / props.itemHeight);
     if (currentIndex === startIndex.value) return;
     if (
@@ -58,7 +59,11 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
       paddingBottom: (total - endIndex.value) * props.itemHeight + 'px',
     };
   });
-  const onScroll = () => {
+  const onScroll = (e: Event) => {
+    // console.log(e);
+    const dom = (e.target || e.srcElement) as HTMLElement;
+    const top = dom.scrollTop;
+    scrollTop.value = top;
     // 没用用去掉 查询会触发重排
     // const scrollTop = wrap().scrollTop;
     // console.log(scrollTop);
