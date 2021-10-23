@@ -1,96 +1,175 @@
-import { Obj, TableFormTable, TableFormProps } from './types';
-import { Table } from 'element-plus/lib/el-table/src/table/defaults';
-import { ref, computed, Ref, onMounted, reactive } from 'vue';
-const useVirtualScroll = (
-  props: TableFormProps,
-  filteredData: Ref<Obj[]>,
-  tableRef: Ref<TableFormTable<Obj>>
-) => {
-  // 虚拟滚动
-  const realScrollTop = ref(0);
-  const size = computed(() => props.visibleItemCount);
-  const extra = 4;
-  const itemHeight = computed(() => props.itemHeight);
-  const scrollBarHeight = computed(
-    () => filteredData.value.length * itemHeight.value
-  );
-  const scrollbar = ref();
-  const scrollbarWrap = computed(() => {
-    return scrollbar.value?.wrap;
-  });
-  // const tableRef = ref();
+import { Obj,TableFormTable } from '@/components/TableForm/types';
+import { computed, ref, Ref, onMounted, onUnmounted } from 'vue';
 
-  const start = computed(() => {
-    let begin = Math.ceil(realScrollTop.value / itemHeight.value) - extra;
-    begin = begin > 0 ? begin : 0;
-    return begin;
-  });
-  const end = computed(() => {
-    const total = filteredData.value.length;
-    let stop = start.value + size.value + extra;
-    stop = stop > total - 1 ? total - 1 : stop;
-    return stop;
+interface scrollProps {
+  wrapHeight: number;
+  itemHeight: number;
+  isTable: boolean;
+}
+const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | TableFormTable<Obj>>, dataList: Ref<any[]>, isRequest?: Ref<boolean>, getDataCallBack?: (...args:any[])=> void)=> {
+  const wrapStyle = computed(() => {
+    return {
+      overflowY: 'auto',
+      height: `${props.wrapHeight}px`,
+    };
   });
 
-  const tableDataVirtual = computed(() => {
-    return filteredData.value.slice(start.value, end.value);
+  // const scrollWrap = ref();
+  const startIndex = ref(0);
+  const wrap = () => {
+    const dom = props.isTable ? (scrollWrap.value as TableFormTable<Obj>).$refs.bodyWrapper : (scrollWrap as Ref<HTMLElement>).value;
+    return dom;
+  };
+  const visibleMaxNum = ref(0);
+  const scrollTop = ref(0);
+  const getStartIndex = () => {
+    // const top = wrap().scrollTop;
+    // scrollTop.value = top;
+    const top = scrollTop.value;
+    const currentIndex = Math.ceil( top / props.itemHeight);
+    if (currentIndex === startIndex.value) return;
+    if (
+      currentIndex + visibleMaxNum.value >= dataList.value.length - 1 &&
+      isRequest && !isRequest.value
+    ) {
+      console.log('滚动底了');
+      isRequest.value = true;
+      // getData(70);
+      getDataCallBack && getDataCallBack();
+    }
+    let start = currentIndex;
+    start = start - visibleMaxNum.value;
+    start = start >= 0 ? start : 0;
+    startIndex.value = start;
+  };
+  const endIndex = computed(() => {
+    const start = startIndex.value;
+    let end = start + visibleMaxNum.value * (start > 0 ? 3 : 2);
+    const total = dataList.value.length;
+    end = end > total ? total : end;
+    return end;
   });
-  const tableFormTableStyle = computed(() => ({
-    width: '100%',
-    ...(props.virtualScroll
-      ? {
-          transform: `translateY(${start.value * itemHeight.value}px)`,
-          position: 'absolute',
-        }
-      : {}),
-  }));
-  onMounted(() => {
-    const table = tableRef.value as TableFormTable<Obj>;
-    const tableBody = table.$refs.bodyWrapper;
-    tableBody.style.overflowY = 'hidden';
+  const showDataList = computed(() => {
+    return dataList.value.slice(startIndex.value, endIndex.value);
   });
-  const handleScroll = (e: { scrollLeft: number; scrollTop: number }) => {
-    const { scrollTop } = e;
-    const top = (scrollTop * scrollbarWrap.value.clientHeight) / 100;
-    // if (top >= scrollBarHeight.value) return;
-    realScrollTop.value = top;
+  const viewStyle = computed(() => {
+    const total = dataList.value.length;
+    return {
+      paddingTop: startIndex.value * props.itemHeight + 'px',
+      paddingBottom: (total - endIndex.value) * props.itemHeight + 'px',
+    };
+  });
+  const onScroll = (e: Event) => {
+    // console.log(e);
+    const dom = (e.target || e.srcElement) as HTMLElement;
+    const top = dom.scrollTop;
+    scrollTop.value = top;
+    // 没用用去掉 查询会触发重排
+    // const scrollTop = wrap().scrollTop;
+    // console.log(scrollTop);
 
-    if (tableRef.value) {
-      const table = tableRef.value as TableFormTable<Obj>;
-      const tableHeader = table.$refs.headerWrapper;
-      const tableBody = table.$refs.bodyWrapper;
-      tableHeader.style.position = 'reactive';
-      tableHeader.style.top = '0';
+    const fps = 30;
+    const interVal = 1000 / fps;
+    let oldTime = Date.now();
+    const requestAnimationFrame =
+      window.requestAnimationFrame ||
+      window.webkitRequestAnimationFrame ||
+      window?.mozRequestAnimationFrame ||
+      window?.oRequestAnimationFrame ||
+      window?.msRequestAnimationFrame ||
+      function (callback) {
+      window.setTimeout(callback, 1000 / 60);
+    };
 
-      const tableHeaderHeight = tableHeader.clientHeight;
-      if (top) {
-        tableBody.style.position = 'absolute';
-        tableBody.style.zIndex = '100';
-        // TODO: 注意这里逻辑 调试了很久
-        tableBody.style.transform = `-translateY(${
-          start.value * itemHeight.value
-        }px)`;
-
-        // (tableRef.value.$el as HTMLElement).style.paddingTop =
-        //   tableHeaderHeight + 'px';
-      } else {
-        tableBody.style.position = 'static';
-        tableBody.style.top = '0px';
-        // (tableRef.value.$el as HTMLElement).style.paddingTop = '0px';
+    const func = () => {
+      const now = Date.now();
+      getStartIndex();
+      setScrollViewStyle();
+      if (now - oldTime > interVal) {
+        oldTime = now;
+        requestAnimationFrame(func);
       }
+    };
+    // 使用arguements.callee报错
+    /* requestAnimationFrame(() => {
+      const now = Date.now();
+      getStartIndex();
+      if (now - oldTime > interVal) {
+        oldTime = now;
+        requestAnimationFrame(arguments.callee);
+      }
+    }); */
+    requestAnimationFrame(func);
+  };
+
+  // 滚动容器最大可视数量
+  const getContainSize = () => {
+    visibleMaxNum.value = ~~(wrap().offsetHeight / props.itemHeight) + 2;
+  };
+  const scrollBarHeight = computed(() => {
+    return props.itemHeight * dataList.value.length;
+  });
+  const setWrapStyle = () => {
+    // wrap().style.overflowY = wrapStyle.value.overflowY;
+    // wrap().style.height = wrapStyle.value.height;
+    wrap().style.cssText += `overflow-y: ${wrapStyle.value.overflowY};height: ${wrapStyle.value.height}`;
+    // const bar = document.createElement('div');
+    // bar.style.cssText = `height: ${scrollBarHeight.value}px;position: absolute;top: 0;right: 0;left: 0;z-index: -1;`;
+    // wrap().appendChild(bar);
+  };
+  const setScrollViewStyle = (init = false) => {
+    const scrollContainer = wrap();
+    const { paddingTop, paddingBottom } = viewStyle.value;
+    const scrollView = scrollContainer.children[0] as HTMLElement;
+    // 判断元素是否为HTMLElement元素我们经常使用nodeType==1判断元素是否是一个HMTLElement元素。
+    // 
+    if (scrollView.nodeType === 1) {
+      // scrollView.style.paddingTop = paddingTop;
+      // scrollView.style.paddingBottom = paddingBottom;
+      scrollView.style.padding = `${paddingTop} 0 ${paddingBottom}`; 
+      // 用scrollBar高度撑开了
+      // scrollView.style.transform = `translateY(${startIndex.value * props.itemHeight}px)`
+      // scrollView.style.cssText += `postision: absolute; translateY(${startIndex.value * props.itemHeight}px)`
+    }
+
+    // TODO: 这里可以考虑优化重构代码
+    if (props.isTable && !init) {
+      const table = scrollWrap.value as TableFormTable<Obj>;
+      const { fixedBodyWrapper, rightFixedBodyWrapper } = table.$refs;
+      [fixedBodyWrapper, rightFixedBodyWrapper].forEach(v => {
+        if (!v) return;
+        const dom = v.children[0] as HTMLElement;
+        if (dom.nodeType === 1) {
+          dom.style.transform = `translate(0, -${scrollTop.value - startIndex.value * props.itemHeight}px)`;    
+        }
+      });
     }
   };
+  onMounted(() => {
+    setWrapStyle();
+    wrap().addEventListener('scroll', onScroll);
+    getContainSize();
+    setScrollViewStyle(true);
+  });
+  onUnmounted(() => {
+    const dom = wrap();
+    dom && dom.removeEventListener('scroll', onScroll);
+  });
+
   return {
-    handleScroll,
-    tableDataVirtual,
-    realScrollTop,
-    start,
-    end,
+    dataList,
+    wrapStyle,
+    onScroll,
+    scrollWrap,
+    visibleMaxNum,
+    getContainSize,
+    startIndex,
+    getStartIndex,
+    endIndex,
+    showDataList,
+    viewStyle,
     scrollBarHeight,
-    scrollbar,
-    scrollbarWrap,
-    size,
-    itemHeight,
+    scrollTop,
   };
 };
 

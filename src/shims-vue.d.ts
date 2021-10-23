@@ -4,3 +4,9 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+declare interface Window {
+  webkitRequestAnimationFrame: any;
+  mozRequestAnimationFrame: any;
+  oRequestAnimationFrame: any;
+  msRequestAnimationFrame: any;
+}

@@ -27,14 +27,13 @@ import {
   TFCOL,
 } from './types';
 import { defaultRenderFormItem } from './defaultRenderFormItem';
-import { isArray, uniqueId } from 'lodash-es';
+import { uniqueId } from 'lodash-es';
 import { TableColumnCtx } from 'element-plus/lib/el-table/src/table-column/defaults';
 import { renderHeader } from './useRenderHeader';
 
 import mitt from 'mitt';
 import TableFormItem from './form-item.vue';
-// import { useVirtualScroll } from './useVirtualScroll';
-import { useVirtualScroll } from '@/views/useVirtualScroll';
+import { useVirtualScroll } from './useVirtualScroll';
 export default defineComponent({
   name: 'TableForm',
   props: {
@@ -146,18 +145,6 @@ export default defineComponent({
     const filteredData: Ref<NormalObject[]> = ref(props.modelValue);
 
     const filterSort = (val: any, col: TFCOL<Obj>) => {
-      /* const keys = Object.keys(colFuncMap.value);
-      if (keys.length) {
-        const data = props.modelValue.filter(row => {
-          let flag = true;
-          for (let i =0; i < keys.length; ++i) {
-            flag = colFuncMap.value[keys[i]](row[col.name]);
-            if (!flag) break;
-          }
-          return flag;
-        });
-        filteredData.value = data;
-      } */
       // 参考Table.store execFilter的
       const store = (tableFormRef.value as TableFormTable<Obj>).store;
       const columns = store.states.columns.value;
@@ -189,7 +176,6 @@ export default defineComponent({
     });
     provide(tableFormKey, tableForm);
 
-    // const scrollStates = useVirtualScroll(props, filteredData, tableFormRef);
     const scrollStates = useVirtualScroll(props, tableFormRef, filteredData);
 
     return {

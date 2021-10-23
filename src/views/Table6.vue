@@ -8,13 +8,19 @@
 import { ref, onMounted, h, createApp, defineComponent } from 'vue';
 import { uniqueId } from 'lodash-es';
 export default {
-  name: '',
-  setup() {
+  props: {
+    text: {
+      type: String,
+      default: '',
+      required: false,
+    },
+  },
+  setup(props) {
     const domId = ref(uniqueId('domId_'));
     onMounted(() => {
       createApp(defineComponent({
         render() {
-          return h('div', null, '测试');
+          return h('div', null, props?.text || '测试');
         }
       })).mount(`#${domId.value} .scroll`);
     });

@@ -19,7 +19,7 @@
 <script lang="ts">
 import { Random as r } from 'mockjs';
 import { Ref, ref } from 'vue';
-import { useVirtualScroll } from './useVirtualScroll';
+import { useVirtualScroll } from '@/components/TableForm/useVirtualScroll';
 
 export default {
   props: {

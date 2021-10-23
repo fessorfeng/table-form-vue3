@@ -1,8 +1,8 @@
 <template>
   <div>
     <Table6 ></Table6>
-    <Table6 ></Table6>
-    <Table6 ></Table6>
+    <Table6 text="88888"></Table6>
+    <Table6 text="888333388"></Table6>
   </div>
 </template>
 
