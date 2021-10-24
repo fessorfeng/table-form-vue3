@@ -1,5 +1,6 @@
 import { Obj,TableFormTable } from '@/components/TableForm/types';
-import { computed, ref, Ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, Ref, onMounted, onUnmounted, createApp, defineComponent, h } from 'vue';
+import { uniqueId } from 'lodash-es';
 
 interface scrollProps {
   wrapHeight: number;
@@ -25,7 +26,7 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
   const getStartIndex = () => {
     const top = scrollTop.value;
     const currentIndex = Math.ceil( top / props.itemHeight);
-    if (currentIndex === startIndex.value) return;
+    // if (currentIndex === startIndex.value) return;
     if (
       currentIndex + visibleMaxNum.value >= dataList.value.length - 1 &&
       isRequest && !isRequest.value
@@ -41,7 +42,7 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
   };
   const endIndex = computed(() => {
     const start = startIndex.value;
-    let end = start + visibleMaxNum.value * (start > 0 ? 3 : 2);
+    let end = start + visibleMaxNum.value * (start > 0 ? 3 : 3);
     const total = dataList.value.length;
     end = end > total ? total : end;
     return end;
@@ -63,7 +64,7 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
     scrollTop.value = top;
     // 没用用去掉 查询会触发重排
     // const scrollTop = wrap().scrollTop;
-    // console.log(scrollTop);
+    
 
     const fps = 30;
     const interVal = 1000 / fps;
@@ -106,27 +107,42 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
   const scrollBarHeight = computed(() => {
     return props.itemHeight * dataList.value.length;
   });
+  const scrollbarId = uniqueId('table-form-scrollbar');
+  const renderBarDom = () => {
+    const bar = document.createElement('div');
+    bar.id = scrollbarId;
+    // bar.style.cssText = `position: absolute;top: 0;right: 0;left: 0;z-index: -1;`;
+    wrap().appendChild(bar);
+    createApp(defineComponent({
+      render() {
+        return h('div', {
+          style: {
+            height: `${scrollBarHeight.value}px`
+          }
+        }, " ");
+      }
+    })).mount(`#${scrollbarId}`);
+  };
   const setWrapStyle = () => {
     // wrap().style.overflowY = wrapStyle.value.overflowY;
     // wrap().style.height = wrapStyle.value.height;
-    wrap().style.cssText += `overflow-y: ${wrapStyle.value.overflowY};height: ${wrapStyle.value.height}`;
-    // const bar = document.createElement('div');
-    // bar.style.cssText = `height: ${scrollBarHeight.value}px;position: absolute;top: 0;right: 0;left: 0;z-index: -1;`;
-    // wrap().appendChild(bar);
+    wrap().style.cssText += `overflow-y: ${wrapStyle.value.overflowY};height: ${wrapStyle.value.height};position: relative;`;
+    renderBarDom();
   };
   const setScrollViewStyle = (init = false) => {
     const scrollContainer = wrap();
     const { paddingTop, paddingBottom } = viewStyle.value;
     const scrollView = scrollContainer.children[0] as HTMLElement;
     // 判断元素是否为HTMLElement元素我们经常使用nodeType==1判断元素是否是一个HMTLElement元素。
-    // 
+    //
+    const translateY = !startIndex.value ? (0 - scrollTop.value) : (scrollTop.value - startIndex.value * props.itemHeight);
     if (scrollView.nodeType === 1) {
-      // scrollView.style.paddingTop = paddingTop;
-      // scrollView.style.paddingBottom = paddingBottom;
-      scrollView.style.padding = `${paddingTop} 0 ${paddingBottom}`; 
+      // scrollView.style.padding = `${paddingTop} 0 ${paddingBottom}`;
       // 用scrollBar高度撑开了
       // scrollView.style.transform = `translateY(${startIndex.value * props.itemHeight}px)`
-      // scrollView.style.cssText += `postision: absolute; translateY(${startIndex.value * props.itemHeight}px)`
+      // const transFormCss = `transform: translate(0, ${scrollTop.value - startIndex.value * props.itemHeight}px);`;
+      const transFormCss = `transform: translateY(${translateY}px);`;
+      scrollView.style.cssText += `position: absolute;top: 0;right: 0;left: 0;${transFormCss}`;
     }
 
     // TODO: 这里可以考虑优化重构代码
@@ -137,10 +153,12 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
         if (!v) return;
         const dom = v.children[0] as HTMLElement;
         if (dom.nodeType === 1) {
-          dom.style.transform = `translate(0, -${(scrollTop.value - startIndex.value * props.itemHeight)}px)`;    
+          dom.style.transform = `translate(0, -${scrollTop.value - startIndex.value * props.itemHeight}px)`;    
         }
       });
     }
+
+    console.log(scrollTop.value, startIndex.value, endIndex.value, translateY, visibleMaxNum.value);
   };
   onMounted(() => {
     setWrapStyle();
@@ -167,6 +185,8 @@ const useVirtualScroll = (props: scrollProps, scrollWrap: Ref<HTMLElement | Tabl
     viewStyle,
     scrollBarHeight,
     scrollTop,
+
+    renderBarDom,
   };
 };
 

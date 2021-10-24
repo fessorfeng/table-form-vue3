@@ -83,18 +83,18 @@ export default defineComponent({
         attrs: { placeholder: '请输入' },
         options: priorityOptions,
       },
-      // {
-      //   label: '测试结果',
-      //   name: 'testResults',
-      //   type: 'select',
-      //   filterInitialValue: [],
-      //   rules: [{ required: true, message: '该项必填' }],
-      //   attrs: { placeholder: '请输入' },
-      //   options: testResultsOptions,
-      //   // TODO: 左固定注意头部 有部分gutter空白样式要处理
-      //   // fixed: "left" 
-      //   // fixed: "right"
-      // },
+      {
+        label: '测试结果',
+        name: 'testResults',
+        type: 'select',
+        filterInitialValue: [],
+        rules: [{ required: true, message: '该项必填' }],
+        attrs: { placeholder: '请输入' },
+        options: testResultsOptions,
+        // TODO: 左固定注意头部 有部分gutter空白样式要处理
+        // fixed: "left" 
+        fixed: "right"
+      },
     ]);
     const tableData = ref([
       {

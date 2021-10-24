@@ -29,7 +29,7 @@ export default {
     },
     itemHeight: {
       type: Number,
-      default: 59,
+      default: 60,
     },
     isTable: {
       type: Boolean,
