@@ -33,7 +33,8 @@ import { renderHeader } from './useRenderHeader';
 
 import mitt from 'mitt';
 import TableFormItem from './form-item.vue';
-import { useVirtualScroll } from './useVirtualScroll';
+// import { useVirtualScroll } from './useVirtualScroll';
+import { useTransform as useVirtualScroll } from './useTransform';
 export default defineComponent({
   name: 'TableForm',
   props: {
@@ -73,9 +74,21 @@ export default defineComponent({
       type: Number,
       default: 500,
     },
+    maxHeight: {
+      type: Number,
+      default: 500,
+    },
     isTable: {
       type: Boolean,
       default: true,
+    },
+    prevCacheNum: {
+      type: Number,
+      default: 3,
+    },
+    nextCacheNum: {
+      type: Number,
+      default: 3,
     },
   },
   emits: ['update:modelValue', 'change'],
@@ -149,6 +162,7 @@ export default defineComponent({
       const store = (tableFormRef.value as TableFormTable<Obj>).store;
       const columns = store.states.columns.value;
       let sourceData = props.modelValue;
+      console.log(filterValInfo);
       Object.keys(filterValInfo).forEach((colName) => {
         let values = filterValInfo[colName];
         if (!values || values.length === 0) return;

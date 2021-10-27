@@ -81,9 +81,8 @@ export default {
       });
       isRequest.value = false;
     };
-    getData(70);
+    getData(700);
     const scrollWrap = ref();
-    const scrollList = ref();
     // const useScrollProps = useVirtualScroll(
     //   props,
     //   scrollWrap,
@@ -93,7 +92,7 @@ export default {
     //     getData(70);
     //   }
     // );
-    const useScrollProps = useTransform(props, scrollWrap, scrollList, dataList.value);
+    const useScrollProps = useTransform(props, scrollWrap, dataList);
 
     return {
       getData,

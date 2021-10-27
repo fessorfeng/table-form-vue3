@@ -5,7 +5,6 @@
     @change="changeHandler"
     :readonly="false"
     class="case-mock"
-    :wrapHeight="409"
   ></table-form>
 </template>
 
@@ -93,7 +92,7 @@ export default defineComponent({
         options: testResultsOptions,
         // TODO: 左固定注意头部 有部分gutter空白样式要处理
         // fixed: "left" 
-        fixed: "right"
+        // fixed: "right"
       },
     ]);
     const tableData = ref([

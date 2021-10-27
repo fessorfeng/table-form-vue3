@@ -98,6 +98,7 @@ const renderHeader = (cols: TFCOL<NormalObject>[]) => {
       'onUpdate:modelValue': (val: any) => {
         filterValInfo[col.name] = val;
         const tableFormVm = parent.$parent as TableFormContext;
+        
         if (!tableFormVm.virtualScroll) {
           store.commit('filterChange', {
             column: column,

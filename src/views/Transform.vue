@@ -30,7 +30,7 @@
 
 <script lang="ts">
 // import { NormalObject } from '@/components/TableForm/types';
-import { defineComponent, onMounted, PropType, Ref, ref } from 'vue';
+import { computed, defineComponent, onMounted, PropType, Ref, ref } from 'vue';
 import {useTransform as useVirtualScroll} from '@/components/TableForm/useTransform';
 import { NormalObject } from '@/components/TableForm/types';
 export default defineComponent({
@@ -54,7 +54,7 @@ export default defineComponent({
       type: Number,
       default: 3,
     },
-    height: {
+    wrapHeight: {
       type: Number,
       required: true,
       default: 500,
@@ -68,12 +68,12 @@ export default defineComponent({
   setup(props) {
     // ref
     const scrollWrap = ref() as Ref<HTMLElement>;
-    const scrollList = ref() as Ref<HTMLElement>;
-    const useTransfrom = useVirtualScroll(props, scrollWrap, scrollList, props.list);
-
-    // lifeCycle
-    // onMounted(() => {});    
+    const dataList = computed(() => {
+      return props.list;
+    });
+    const useTransfrom = useVirtualScroll(props, scrollWrap, dataList); 
     return {
+      dataList,
       ...useTransfrom
     };
   },
