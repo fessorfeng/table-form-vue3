@@ -1,5 +1,5 @@
 import { Obj } from '@/components/TableForm/types';
-import { NormalObject, TableFormTable } from './types';
+import { TableFormTable } from './types';
 import {
   computed,
   ref,
@@ -59,15 +59,23 @@ const useTransform = (
   const showList = computed(() => {
     return dataList.value.slice(start.value, end.value);
   });
-
+  
   const showDataList = computed(() => {
     return dataList.value.slice(start.value, end.value);
   });
 
   // methods
   const getNewStartIndex = (expectStart: number) => {
-    const start = expectStart - props.prevCacheNum;
-    return start >= 0 ? start : 0;
+    if (expectStart === start.value) return;
+    if (
+      expectStart + remain.value  + props.nextCacheNum >= dataList.value.length - 1 &&
+      isRequest && !isRequest.value
+    ) {
+      isRequest.value = true;
+      getDataCallBack && getDataCallBack();
+    }
+    const startIndex = expectStart - props.prevCacheNum;
+    start.value = startIndex >= 0 ? startIndex : 0;
   };
   const handleScroll = (e: Event) => {
     const ele = (e.srcElement || e.target) as HTMLElement;
@@ -78,8 +86,7 @@ const useTransform = (
     // 是否做成配置
     if (!isrAF) {
       const num = Math.floor(top / props.itemHeight);
-      const startIndex = getNewStartIndex(num);
-      start.value = startIndex;
+      getNewStartIndex(num);
       setScrollViewStyle();
     } else {
       const fps = 60;
@@ -98,7 +105,7 @@ const useTransform = (
       const func = () => {
         const now = Date.now();
         const num = Math.floor(top / props.itemHeight);
-        start.value = getNewStartIndex(num);
+        getNewStartIndex(num);
         setScrollViewStyle();
         if (now - oldTime > interVal) {
           oldTime = now;

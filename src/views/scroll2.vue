@@ -20,7 +20,7 @@
 import { Random as r } from 'mockjs';
 import { Ref, ref } from 'vue';
 // import { useVirtualScroll } from './useVirtualScroll';
-import { useTransform } from '@/components/TableForm/useTransform';
+import { useTransform as useVirtualScroll} from '@/components/TableForm/useTransform';
 
 export default {
   props: {
@@ -44,14 +44,8 @@ export default {
       type: Number,
       default: 3,
     },
-    height: {
-      type: Number,
-      required: true,
-      default: 500,
-    },
     maxHeight: {
       type: Number,
-      required: true,
       default: 500,
     },
   },
@@ -81,18 +75,17 @@ export default {
       });
       isRequest.value = false;
     };
-    getData(700);
+    getData(70);
     const scrollWrap = ref();
-    // const useScrollProps = useVirtualScroll(
-    //   props,
-    //   scrollWrap,
-    //   dataList,
-    //   isRequest,
-    //   () => {
-    //     getData(70);
-    //   }
-    // );
-    const useScrollProps = useTransform(props, scrollWrap, dataList);
+    const useScrollProps = useVirtualScroll(
+      props,
+      scrollWrap,
+      dataList,
+      isRequest,
+      () => {
+        getData(70);
+      }
+    );
 
     return {
       getData,
