@@ -52,6 +52,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () =>
       import( "../views/VirtualScroll.vue"),
   },
+  {
+    path: "/array",
+    component: () =>
+      import( "../views/examples/array.vue"),
+  },
 ];
 
 const router = createRouter({
