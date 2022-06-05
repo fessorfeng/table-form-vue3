@@ -3,7 +3,6 @@
 import {
   computed,
   defineComponent,
-  getCurrentInstance,
   h,
   PropType,
   provide,
@@ -12,9 +11,8 @@ import {
   ref,
   toRefs,
   VNode,
-  watch,
 } from 'vue';
-import { ElTableColumn, ElTable, ElScrollbar } from 'element-plus';
+import { ElTableColumn, ElTable } from 'element-plus';
 
 import {
   NormalObject,
@@ -165,7 +163,9 @@ export default defineComponent({
       console.log(filterValInfo);
       Object.keys(filterValInfo).forEach((colName) => {
         let values = filterValInfo[colName];
-        if (!values || values.length === 0) return;
+        if (!values || values.length === 0) {
+          return;
+        }
         values = Array.isArray(values) ? values : [values];
         const column = columns.find((c) => colName === c.property);
         // 兼容写法，col.filterMethod可以外传进去
@@ -348,7 +348,7 @@ export default defineComponent({
         class: ['table-form'],
         style: { position: 'relative' },
       },
-      [renderTable()],
+      [renderTable()]
     );
   },
 
